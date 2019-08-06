@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+before_install:
+  - docker build -t khoa/react-test -f ./client/Dockerfile.dev ./client
+script:
+   - docker run -e CI=true khoa/react-test npm run test -- --coverage
+
+after_success:
+  - docker build -t khoa/multi-client ./client
+  - docker build -t khoa/multi-nginx ./nginx
+  - docker build -t khoa/multi-server ./server
+  - docker build -t khoa/multi-worker ./worker
+  # log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take those image and push them to docker hub
+  - docker push khoa/multi-client
+  - docker push khoa/multi-nginx
+  - docker push khoa/multi-server
+  - docker push khoa/multi-worker
